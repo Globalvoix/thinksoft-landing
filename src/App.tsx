@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, Copy } from 'lucide-react';
+import { ChevronDown, Copy, Check } from 'lucide-react';
+
+const INSTALL_CMD = "npm install -g thinksoft"
 
 const ThinksoftLogo = ({ className = "w-5 h-4 text-[9px]" }) => (
   <div className={`flex items-center justify-center border border-current rounded-sm font-mono font-bold leading-none ${className}`}>
@@ -127,6 +129,16 @@ const faqs = [
 ];
 
 export default function App() {
+  const [copied, setCopied] = useState(false);
+
+  const copyCmd = async () => {
+    try {
+      await navigator.clipboard.writeText(INSTALL_CMD);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans selection:bg-white/20">
       {/* Navbar */}
@@ -148,9 +160,9 @@ export default function App() {
         </p>
         
         <div className="flex items-center bg-[#ebebeb] text-[#111] rounded-[10px] p-1.5 w-full max-w-[320px] mx-auto font-mono text-[12px] sm:text-[14px]">
-          <span className="flex-1 px-3 text-left overflow-hidden text-ellipsis whitespace-nowrap">npm install -g thinksoft</span>
-          <button className="bg-[#2a2a2a] shrink-0 text-white p-2 sm:p-2.5 rounded-lg hover:bg-[#404040] transition-colors flex items-center justify-center cursor-pointer">
-            <Copy size={16} />
+          <span className="flex-1 px-3 text-left overflow-hidden text-ellipsis whitespace-nowrap">{INSTALL_CMD}</span>
+          <button onClick={copyCmd} className="bg-[#2a2a2a] shrink-0 text-white p-2 sm:p-2.5 rounded-lg hover:bg-[#404040] transition-colors flex items-center justify-center cursor-pointer">
+            {copied ? <Check size={16} /> : <Copy size={16} />}
           </button>
         </div>
       </main>
@@ -283,9 +295,9 @@ export default function App() {
                 <button className="text-neutral-400 px-3 py-1.5 rounded-full text-[12px] sm:text-[13px] hover:bg-white/5 transition-colors">Linux / WSL</button>
               </div>
               <div className="flex items-center bg-[#222] border border-white/5 rounded-xl p-1.5 w-full max-w-sm font-mono text-[12px] sm:text-[14px]">
-                <span className="flex-1 px-3 text-neutral-200 overflow-hidden text-ellipsis whitespace-nowrap">npm install -g thinksoft</span>
-                <button className="bg-white/10 shrink-0 text-white p-2 sm:p-2.5 rounded-lg hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer">
-                  <Copy size={16} />
+                <span className="flex-1 px-3 text-neutral-200 overflow-hidden text-ellipsis whitespace-nowrap">{INSTALL_CMD}</span>
+                <button onClick={copyCmd} className="bg-white/10 shrink-0 text-white p-2 sm:p-2.5 rounded-lg hover:bg-white/20 transition-colors flex items-center justify-center cursor-pointer">
+                  {copied ? <Check size={16} /> : <Copy size={16} />}
                 </button>
               </div>
             </div>
