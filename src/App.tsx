@@ -152,7 +152,7 @@ export default function App() {
       {/* Hero Section */}
       <main className="flex flex-col items-center mt-12 sm:mt-16 px-4 text-center">
         <h1 className="text-[36px] sm:text-[48px] md:text-[56px] font-medium tracking-tight mb-4 sm:mb-5 leading-[1.1]">
-          Code with surgical precision.
+          From imagination to production.
         </h1>
         <p className="text-neutral-400 text-[15px] sm:text-base md:text-lg max-w-2xl mb-8 leading-relaxed font-normal">
           The AI coding engine that gets it surgically right.<br className="hidden sm:block" />
