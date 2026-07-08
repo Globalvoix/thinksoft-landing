@@ -161,7 +161,7 @@ export default function App() {
         
         <div className="flex items-center bg-[#ebebeb] text-[#111] rounded-[10px] p-1.5 w-full max-w-[320px] mx-auto font-mono text-[12px] sm:text-[14px]">
           <span className="flex-1 px-3 text-left overflow-hidden text-ellipsis whitespace-nowrap">{INSTALL_CMD}</span>
-          <button onClick={copyCmd} className="bg-[#2a2a2a] shrink-0 text-white p-2 sm:p-2.5 rounded-lg hover:bg-[#404040] transition-colors flex items-center justify-center cursor-pointer">
+          <button onClick={copyCmd} aria-label="Copy install command" className="bg-[#2a2a2a] shrink-0 text-white p-2 sm:p-2.5 rounded-lg hover:bg-[#404040] transition-colors flex items-center justify-center cursor-pointer">
             {copied ? <Check size={16} /> : <Copy size={16} />}
           </button>
         </div>
