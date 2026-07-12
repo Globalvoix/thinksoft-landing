@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChevronDown, Copy, Check } from 'lucide-react';
 
 const INSTALL_CMD = "npm install -g thinksoft"
@@ -8,22 +8,6 @@ const ThinksoftLogo = ({ className = "w-5 h-4 text-[9px]" }) => (
     {'>_'}
   </div>
 );
-
-function AdUnit() {
-  useEffect(() => {
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({})
-    } catch {}
-  }, [])
-  return (
-    <ins className="adsbygoogle"
-         style={{ display: 'block' }}
-         data-ad-client="ca-pub-4699340263778811"
-         data-ad-slot="YOUR_AD_SLOT_ID"
-         data-ad-format="auto"
-         data-full-width-responsive="true" />
-  )
-}
 
 function FAQItem({ question, answer }: { question: string, answer: string, key?: number }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -337,13 +321,6 @@ export default function App() {
           </div>
         </div>
       </section>
-
-      {/* Ad Strip */}
-      <div className="w-full border-t border-white/5 bg-[#111] py-6 mt-16 sm:mt-24">
-        <div className="max-w-[1200px] mx-auto px-4 text-center">
-          <AdUnit />
-        </div>
-      </div>
     </div>
   );
 }
