@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, Copy, Check } from 'lucide-react';
 
-const INSTALL_CMD = "npm install -g thinksoft"
+const INSTALL_CMD = "npm install -g thinksoft@dev"
 
 const ThinksoftLogo = ({ className = "w-5 h-4 text-[9px]" }) => (
   <div className={`flex items-center justify-center border border-current rounded-sm font-mono font-bold leading-none ${className}`}>
@@ -115,7 +115,7 @@ function TerminalMockup({ className = "" }: { className?: string }) {
 }
 
 const faqs = [
-  { q: "How do I install Thinksoft?", a: "Run `npm install -g thinksoft` in your terminal and you are ready." },
+  { q: "How do I install Thinksoft?", a: "Run `npm install -g thinksoft@dev` in your terminal and you are ready." },
   { q: "Do I need my own API keys?", a: "Yes. You bring your own keys from OpenAI, Anthropic, Google, or any supported provider." },
   { q: "What models does Thinksoft support?", a: "Frontier models from OpenAI, Anthropic, Google, DeepSeek, Grok, and more. Switch models mid-session with `/model`." },
   { q: "Is my code sent to third parties?", a: "Only to the AI provider you choose. We do not store your code." },
