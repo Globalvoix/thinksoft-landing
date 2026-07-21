@@ -150,7 +150,7 @@ export default function App() {
         <div className="flex items-center gap-3">
           <a
             href="/login.html"
-            className="text-[14px] text-neutral-300 hover:text-white transition-colors font-medium px-3 py-1.5"
+            className="text-[14px] text-neutral-300 hover:text-white transition-colors font-medium px-3 py-1.5 border border-white/30 rounded-full"
           >
             Log in
           </a>
