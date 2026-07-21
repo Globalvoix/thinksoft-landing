@@ -147,6 +147,20 @@ export default function App() {
           <ThinksoftLogo className="w-5 h-4 text-[9px]" />
           <span className="font-medium text-base tracking-tight">Thinksoft</span>
         </div>
+        <div className="flex items-center gap-3">
+          <a
+            href="/login"
+            className="text-[14px] text-neutral-300 hover:text-white transition-colors font-medium px-3 py-1.5"
+          >
+            Log in
+          </a>
+          <a
+            href="/login"
+            className="text-[14px] font-medium bg-white text-black px-4 py-1.5 rounded-full hover:bg-neutral-200 transition-colors"
+          >
+            Get started
+          </a>
+        </div>
       </nav>
 
       {/* Hero Section */}
