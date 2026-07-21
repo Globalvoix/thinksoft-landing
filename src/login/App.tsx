@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSignIn, useSignUp } from '@clerk/clerk-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -6,18 +7,131 @@ export default function Login() {
   const [isFocused, setIsFocused] = useState(false)
   const [isPasswordFocused, setIsPasswordFocused] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
+  const [error, setError] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+  const [showVerification, setShowVerification] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const { signIn, setActive: setActiveSignIn } = useSignIn()
+  const { signUp, setActive: setActiveSignUp } = useSignUp()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      if (isSignUp) {
+        if (!signUp) return
+        const result = await signUp.create({ emailAddress: email, password })
+        if (result.status === 'complete') {
+          await setActiveSignUp({ session: result.createdSessionId })
+          window.location.href = '/'
+        } else {
+          await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+          setShowVerification(true)
+        }
+      } else {
+        if (!signIn) return
+        const result = await signIn.create({ identifier: email, password })
+        if (result.status === 'complete') {
+          await setActiveSignIn({ session: result.createdSessionId })
+          window.location.href = '/'
+        }
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      if (!signUp) return
+      const result = await signUp.attemptEmailAddressVerification({ code: verificationCode })
+      if (result.status === 'complete') {
+        await setActiveSignUp({ session: result.createdSessionId })
+        window.location.href = '/'
+      } else {
+        setError('Invalid verification code')
+      }
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || 'Verification failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    if (!signIn) return
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: window.location.href,
+        redirectUrlComplete: window.location.origin + '/',
+      })
+    } catch (err: any) {
+      setError(err.errors?.[0]?.longMessage || 'Google sign in failed')
+    }
+  }
+
+  if (showVerification) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col font-sans text-[#202124]">
+        <header className="p-4 sm:p-6 flex items-center justify-between">
+          <div className="text-xl sm:text-[1.35rem] tracking-tight flex items-center gap-1.5 font-bold">
+            <a href="/" className="hover:opacity-70 transition-opacity">
+              Thinksoft <span className="font-normal text-gray-900">CLI</span>
+            </a>
+          </div>
+          <a href="/" className="text-sm text-gray-500 hover:text-[#2563eb] transition-colors">&larr; Back to home</a>
+        </header>
+        <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-20">
+          <div className="w-full max-w-[320px] flex flex-col items-center">
+            <h1 className="text-2xl sm:text-3xl font-normal mb-8 text-center">Check your email</h1>
+            <p className="text-sm text-gray-500 mb-6 text-center">
+              We sent a verification code to <strong>{email}</strong>
+            </p>
+            <form onSubmit={handleVerify} className="w-full">
+              <div className="w-full relative mb-6">
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 outline-none bg-transparent text-sm text-center border border-gray-300"
+                  style={{ borderRadius: '12px' }}
+                  placeholder="Verification code"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading || !verificationCode}
+                className="w-full bg-[#202124] text-white font-medium text-sm py-2.5 hover:bg-[#303134] transition-colors mb-5 disabled:opacity-50"
+                style={{ borderRadius: '32px' }}
+              >
+                {loading ? 'Verifying...' : 'Verify'}
+              </button>
+            </form>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-[#ffffff] flex flex-col font-sans text-[#202124]">
+    <div className="min-h-screen bg-white flex flex-col font-sans text-[#202124]">
       <header className="p-4 sm:p-6 flex items-center justify-between">
         <div className="text-xl sm:text-[1.35rem] tracking-tight flex items-center gap-1.5 font-bold">
           <a href="/" className="hover:opacity-70 transition-opacity">
             Thinksoft <span className="font-normal text-gray-900">CLI</span>
           </a>
         </div>
-        <a href="/" className="text-sm text-gray-500 hover:text-[#2563eb] transition-colors">
-          &larr; Back to home
-        </a>
+        <a href="/" className="text-sm text-gray-500 hover:text-[#2563eb] transition-colors">&larr; Back to home</a>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-20">
@@ -26,69 +140,75 @@ export default function Login() {
             {isSignUp ? 'Create your account' : 'Welcome back'}
           </h1>
 
-          <div className="w-full relative mb-4">
-            <div
-              className={`relative w-full border transition-all duration-200 ${
-                isFocused ? 'border-[#2563eb]' : 'border-gray-300'
-              }`}
-              style={{ borderRadius: '12px' }}
-            >
-              <label
-                className={`absolute left-3 transition-all duration-200 bg-white px-1 pointer-events-none ${
-                  isFocused || email
-                    ? '-top-2 text-xs text-[#2563eb]'
-                    : 'top-2.5 text-sm text-gray-500'
+          <form onSubmit={handleSubmit} className="w-full">
+            <div className="w-full relative mb-4">
+              <div
+                className={`relative w-full border transition-all duration-200 ${
+                  isFocused ? 'border-[#2563eb]' : 'border-gray-300'
                 }`}
-              >
-                Email address
-              </label>
-              <input
-                type="email"
-                className="w-full px-4 py-2.5 outline-none bg-transparent text-sm"
                 style={{ borderRadius: '12px' }}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                autoFocus
-              />
+              >
+                <label
+                  className={`absolute left-3 transition-all duration-200 bg-white px-1 pointer-events-none ${
+                    isFocused || email
+                      ? '-top-2 text-xs text-[#2563eb]'
+                      : 'top-2.5 text-sm text-gray-500'
+                  }`}
+                >
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-2.5 outline-none bg-transparent text-sm"
+                  style={{ borderRadius: '12px' }}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  autoFocus
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="w-full relative mb-6">
-            <div
-              className={`relative w-full border transition-all duration-200 ${
-                isPasswordFocused ? 'border-[#2563eb]' : 'border-gray-300'
-              }`}
-              style={{ borderRadius: '12px' }}
-            >
-              <label
-                className={`absolute left-3 transition-all duration-200 bg-white px-1 pointer-events-none ${
-                  isPasswordFocused || password
-                    ? '-top-2 text-xs text-[#2563eb]'
-                    : 'top-2.5 text-sm text-gray-500'
+            <div className="w-full relative mb-6">
+              <div
+                className={`relative w-full border transition-all duration-200 ${
+                  isPasswordFocused ? 'border-[#2563eb]' : 'border-gray-300'
                 }`}
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                className="w-full px-4 py-2.5 outline-none bg-transparent text-sm"
                 style={{ borderRadius: '12px' }}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => setIsPasswordFocused(true)}
-                onBlur={() => setIsPasswordFocused(false)}
-              />
+              >
+                <label
+                  className={`absolute left-3 transition-all duration-200 bg-white px-1 pointer-events-none ${
+                    isPasswordFocused || password
+                      ? '-top-2 text-xs text-[#2563eb]'
+                      : 'top-2.5 text-sm text-gray-500'
+                  }`}
+                >
+                  Password
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-2.5 outline-none bg-transparent text-sm"
+                  style={{ borderRadius: '12px' }}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setIsPasswordFocused(true)}
+                  onBlur={() => setIsPasswordFocused(false)}
+                />
+              </div>
             </div>
-          </div>
 
-          <button
-            className="w-full bg-[#202124] text-white font-medium text-sm py-2.5 hover:bg-[#303134] transition-colors mb-5"
-            style={{ borderRadius: '32px' }}
-          >
-            Continue
-          </button>
+            {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="w-full bg-[#202124] text-white font-medium text-sm py-2.5 hover:bg-[#303134] transition-colors mb-5 disabled:opacity-50"
+              style={{ borderRadius: '32px' }}
+            >
+              {loading ? 'Loading...' : 'Continue'}
+            </button>
+          </form>
 
           <p className="text-sm text-[#202124] mb-8">
             {isSignUp ? (
@@ -97,10 +217,7 @@ export default function Login() {
                 <a
                   href="#"
                   className="text-[#2563eb] hover:underline"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setIsSignUp(false)
-                  }}
+                  onClick={(e) => { e.preventDefault(); setIsSignUp(false); setError('') }}
                 >
                   Log in
                 </a>
@@ -111,10 +228,7 @@ export default function Login() {
                 <a
                   href="#"
                   className="text-[#2563eb] hover:underline"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setIsSignUp(true)
-                  }}
+                  onClick={(e) => { e.preventDefault(); setIsSignUp(true); setError('') }}
                 >
                   Sign up
                 </a>
@@ -132,6 +246,7 @@ export default function Login() {
             <SocialButton
               icon={<GoogleIcon />}
               text="Continue with Google"
+              onClick={handleGoogleSignIn}
             />
           </div>
         </div>
@@ -140,9 +255,10 @@ export default function Login() {
   )
 }
 
-function SocialButton({ icon, text }: { icon: React.ReactNode; text: string }) {
+function SocialButton({ icon, text, onClick }: { icon: React.ReactNode; text: string; onClick?: () => void }) {
   return (
     <button
+      onClick={onClick}
       className="w-full flex items-center border border-gray-300 py-2.5 px-4 hover:bg-gray-50 transition-colors"
       style={{ borderRadius: '32px' }}
     >
