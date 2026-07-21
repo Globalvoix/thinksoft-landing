@@ -9,10 +9,15 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[#ffffff] flex flex-col font-sans text-[#202124]">
-      <header className="p-4 sm:p-6">
+      <header className="p-4 sm:p-6 flex items-center justify-between">
         <div className="text-xl sm:text-[1.35rem] tracking-tight flex items-center gap-1.5 font-bold">
-          Thinksoft <span className="font-normal text-gray-900">CLI</span>
+          <a href="/" className="hover:opacity-70 transition-opacity">
+            Thinksoft <span className="font-normal text-gray-900">CLI</span>
+          </a>
         </div>
+        <a href="/" className="text-sm text-gray-500 hover:text-[#2563eb] transition-colors">
+          &larr; Back to home
+        </a>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-20">
