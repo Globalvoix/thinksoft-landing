@@ -5,7 +5,19 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'rewrite-login',
+        configureServer(server) {
+          server.middlewares.use('/login', (req, _res, next) => {
+            req.url = '/login.html'
+            next()
+          })
+        },
+      },
+    ],
     build: {
       rollupOptions: {
         input: {
