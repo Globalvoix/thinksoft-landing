@@ -1,5 +1,21 @@
-import { useState } from 'react'
-import { useSignIn, useSignUp } from '@clerk/clerk-react'
+import { useState, useEffect } from 'react'
+import { useSignIn, useSignUp, useClerk } from '@clerk/clerk-react'
+
+const cliPort = new URLSearchParams(window.location.search).get('cliPort')
+
+async function sendTokenToCli(token: string) {
+  if (!cliPort) return false
+  try {
+    const res = await fetch(`http://127.0.0.1:${cliPort}/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -11,9 +27,30 @@ export default function Login() {
   const [verificationCode, setVerificationCode] = useState('')
   const [showVerification, setShowVerification] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [authenticated, setAuthenticated] = useState(false)
 
   const { signIn, setActive: setActiveSignIn } = useSignIn()
   const { signUp, setActive: setActiveSignUp } = useSignUp()
+  const clerk = useClerk()
+
+  useEffect(() => {
+    if (!clerk.session || !cliPort || authenticated) return
+    ;(async () => {
+      const token = await clerk.session?.getToken()
+      if (token) await sendTokenToCli(token)
+      setAuthenticated(true)
+    })()
+  }, [clerk.session])
+
+  const finishAuth = async () => {
+    if (cliPort) {
+      const token = await clerk.session?.getToken()
+      if (token) await sendTokenToCli(token)
+      setAuthenticated(true)
+    } else {
+      window.location.href = '/'
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,7 +62,7 @@ export default function Login() {
         const result = await signUp.create({ emailAddress: email, password })
         if (result.status === 'complete') {
           await setActiveSignUp({ session: result.createdSessionId })
-          window.location.href = '/'
+          await finishAuth()
         } else {
           await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
           setShowVerification(true)
@@ -35,7 +72,7 @@ export default function Login() {
         const result = await signIn.create({ identifier: email, password })
         if (result.status === 'complete') {
           await setActiveSignIn({ session: result.createdSessionId })
-          window.location.href = '/'
+          await finishAuth()
         }
       }
     } catch (err: any) {
@@ -54,7 +91,7 @@ export default function Login() {
       const result = await signUp.attemptEmailAddressVerification({ code: verificationCode })
       if (result.status === 'complete') {
         await setActiveSignUp({ session: result.createdSessionId })
-        window.location.href = '/'
+        await finishAuth()
       } else {
         setError('Invalid verification code')
       }
@@ -68,14 +105,45 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     if (!signIn) return
     try {
+      const qs = cliPort ? `?cliPort=${cliPort}` : ''
       await signIn.authenticateWithRedirect({
         strategy: 'oauth_google',
-        redirectUrl: window.location.href,
-        redirectUrlComplete: window.location.origin + '/',
+        redirectUrl: window.location.origin + '/login' + qs,
+        redirectUrlComplete: window.location.origin + '/login' + qs,
       })
     } catch (err: any) {
       setError(err.errors?.[0]?.longMessage || 'Google sign in failed')
     }
+  }
+
+  if (authenticated) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col font-sans text-[#202124]">
+        <header className="p-4 sm:p-6 flex items-center justify-between">
+          <div className="text-xl sm:text-[1.35rem] tracking-tight flex items-center gap-1.5 font-bold">
+            <a href="/" className="hover:opacity-70 transition-opacity">
+              Thinksoft <span className="font-normal text-gray-900">CLI</span>
+            </a>
+          </div>
+          <a href="/" className="text-sm text-gray-500 hover:text-[#2563eb] transition-colors">&larr; Back to home</a>
+        </header>
+        <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-20">
+          <div className="w-full max-w-[360px] flex flex-col items-center text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-normal mb-3">{cliPort ? 'Connected to CLI' : 'Signed in'}</h1>
+            <p className="text-sm text-gray-500">
+              {cliPort
+                ? 'You can close this tab and return to the terminal.'
+                : 'You are now signed in.'}
+            </p>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   if (showVerification) {
